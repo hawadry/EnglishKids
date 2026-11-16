@@ -1,0 +1,6 @@
+{
+  "name": "نجوم الإنجليزية",
+  "description": "تطبيق تفاعلي لتعليم اللغة الإنجليزية للطفل العربي عبر الحروف والكلمات والنطق الصوتي والألعاب التعليمية",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

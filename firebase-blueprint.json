@@ -1,0 +1,132 @@
+{
+  "entities": {
+    "ChildProfile": {
+      "title": "ChildProfile",
+      "description": "Stores the child's learning profile, selected avatar, total earned stars, daily streak, and completed quiz count.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase Auth UID owning this profile."
+        },
+        "childName": {
+          "type": "string",
+          "description": "Child's display nickname (1-40 characters)."
+        },
+        "avatarId": {
+          "type": "string",
+          "description": "Selected mascot avatar identifier.",
+          "enum": ["owl", "lion", "star", "rocket", "cat", "bunny"]
+        },
+        "totalStars": {
+          "type": "integer",
+          "description": "Cumulative stars earned across lessons and quizzes."
+        },
+        "streakDays": {
+          "type": "integer",
+          "description": "Learning streak count."
+        },
+        "completedQuizzes": {
+          "type": "integer",
+          "description": "Total number of completed quizzes and spelling games."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of profile creation (clients submit FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last profile update (clients submit FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "childName", "avatarId", "totalStars", "streakDays", "completedQuizzes", "createdAt", "updatedAt"]
+    },
+    "MasteredWord": {
+      "title": "MasteredWord",
+      "description": "Records an English letter, number, or vocabulary word mastered by the child.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase Auth UID owning this record."
+        },
+        "wordId": {
+          "type": "string",
+          "description": "Curriculum identifier of the learned item."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Learning world category identifier."
+        },
+        "englishWord": {
+          "type": "string",
+          "description": "English word or letter text."
+        },
+        "starsEarned": {
+          "type": "integer",
+          "description": "Stars awarded for mastering this word."
+        },
+        "masteredAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the word was mastered (clients submit FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "wordId", "categoryId", "englishWord", "starsEarned", "masteredAt"]
+    },
+    "QuizSession": {
+      "title": "QuizSession",
+      "description": "Records the result of a completed listening quiz or spelling game session.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase Auth UID owning this session."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Category practiced in this session."
+        },
+        "gameType": {
+          "type": "string",
+          "description": "Type of interactive game played.",
+          "enum": ["listen_quiz", "spelling_game"]
+        },
+        "score": {
+          "type": "integer",
+          "description": "Number of correct answers."
+        },
+        "totalQuestions": {
+          "type": "integer",
+          "description": "Total questions in the session."
+        },
+        "starsEarned": {
+          "type": "integer",
+          "description": "Total stars earned in this session."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of session completion (clients submit FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "categoryId", "gameType", "score", "totalQuestions", "starsEarned", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/ChildProfile" },
+      "description": "Stores each signed-in family's child learning profile and aggregate progress."
+    },
+    "/users/{userId}/masteredWords/{wordId}": {
+      "schema": { "$ref": "#/entities/MasteredWord" },
+      "description": "Stores letters and words mastered by the child."
+    },
+    "/users/{userId}/quizSessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/QuizSession" },
+      "description": "Stores completed quiz and spelling game history."
+    }
+  }
+}

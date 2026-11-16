@@ -1,0 +1,121 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Entity Validation Helpers ---
+    function isValidChildProfile(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.childName is string && data.childName.size() >= 1 && data.childName.size() <= 40 &&
+             data.avatarId in ['owl', 'lion', 'star', 'rocket', 'cat', 'bunny'] &&
+             data.totalStars is int && data.totalStars >= 0 && data.totalStars <= 1000000 &&
+             data.streakDays is int && data.streakDays >= 0 && data.streakDays <= 36500 &&
+             data.completedQuizzes is int && data.completedQuizzes >= 0 && data.completedQuizzes <= 1000000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidMasteredWord(data, userId, wordId) {
+      return data.userId is string && data.userId == userId &&
+             data.wordId is string && data.wordId == wordId && data.wordId.size() >= 1 && data.wordId.size() <= 64 &&
+             data.categoryId in ['alphabet', 'numbers', 'animals', 'colors', 'food', 'greetings'] &&
+             data.englishWord is string && data.englishWord.size() >= 1 && data.englishWord.size() <= 64 &&
+             data.starsEarned is int && data.starsEarned >= 0 && data.starsEarned <= 100 &&
+             data.masteredAt is timestamp && data.masteredAt <= request.time;
+    }
+
+    function isValidQuizSession(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.categoryId in ['alphabet', 'numbers', 'animals', 'colors', 'food', 'greetings', 'mixed'] &&
+             data.gameType in ['listen_quiz', 'spelling_game'] &&
+             data.score is int && data.score >= 0 && data.score <= 50 &&
+             data.totalQuestions is int && data.totalQuestions >= 1 && data.totalQuestions <= 50 &&
+             data.score <= data.totalQuestions &&
+             data.starsEarned is int && data.starsEarned >= 0 && data.starsEarned <= 500 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    // --- Collection Rules ---
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if isOwner(userId);
+
+      allow create: if isValidId(userId) &&
+                       isOwner(userId) &&
+                       incoming().keys().hasAll(['userId', 'childName', 'avatarId', 'totalStars', 'streakDays', 'completedQuizzes', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'childName', 'avatarId', 'totalStars', 'streakDays', 'completedQuizzes', 'createdAt', 'updatedAt']) &&
+                       isValidChildProfile(incoming(), userId);
+
+      allow update: if isValidId(userId) &&
+                       isOwner(userId) &&
+                       isValidChildProfile(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['childName', 'avatarId', 'totalStars', 'streakDays', 'completedQuizzes', 'updatedAt']);
+
+      allow delete: if isValidId(userId) && isOwner(userId);
+
+      match /masteredWords/{wordId} {
+        allow get: if isValidId(userId) && isValidId(wordId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId);
+
+        allow create: if isValidId(userId) &&
+                         isValidId(wordId) &&
+                         isOwner(userId) &&
+                         incoming().keys().hasAll(['userId', 'wordId', 'categoryId', 'englishWord', 'starsEarned', 'masteredAt']) &&
+                         incoming().keys().hasOnly(['userId', 'wordId', 'categoryId', 'englishWord', 'starsEarned', 'masteredAt']) &&
+                         isValidMasteredWord(incoming(), userId, wordId);
+
+        allow update: if isValidId(userId) &&
+                         isValidId(wordId) &&
+                         isOwner(userId) &&
+                         isValidMasteredWord(incoming(), userId, wordId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().wordId == existing().wordId &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['categoryId', 'englishWord', 'starsEarned', 'masteredAt']);
+
+        allow delete: if isValidId(userId) && isValidId(wordId) && isOwner(userId);
+      }
+
+      match /quizSessions/{sessionId} {
+        allow get: if isValidId(userId) && isValidId(sessionId) && isOwner(userId);
+        allow list: if isValidId(userId) && isOwner(userId);
+
+        allow create: if isValidId(userId) &&
+                         isValidId(sessionId) &&
+                         isOwner(userId) &&
+                         incoming().keys().hasAll(['userId', 'categoryId', 'gameType', 'score', 'totalQuestions', 'starsEarned', 'createdAt']) &&
+                         incoming().keys().hasOnly(['userId', 'categoryId', 'gameType', 'score', 'totalQuestions', 'starsEarned', 'createdAt']) &&
+                         isValidQuizSession(incoming(), userId);
+
+        // Append-only quiz history
+        allow update, delete: if false;
+      }
+    }
+  }
+}

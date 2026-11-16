@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">نجوم الإنجليزية</string>
+    <string name="mascot_content_description">البومة الذكية صديقة التعلم</string>
+    <string name="hero_banner_content_description">حديقة التعلم المليئة بالحروف والنجوم</string>
+    <string name="trophy_content_description">كأس النجوم الذهبي للإنجاز</string>
+    <string name="auth_subtitle">رحلة ممتعة ومليئة بالألوان لتعلم الحروف والكلمات الإنجليزية بالصوت والألعاب</string>
+    <string name="auth_parent_note_title">حساب العائلة لحفظ تقدم البطل</string>
+    <string name="auth_parent_note_body">سجّل بحساب Google لحفظ النجوم والكلمات التي يتقنها طفلك عبر جميع أجهزتك.</string>
+    <string name="sign_in_with_google">تسجيل الدخول بحساب Google</string>
+    <string name="nav_learn">تعلّم</string>
+    <string name="nav_games">ألعاب</string>
+    <string name="nav_profile">بطلي</string>
+    <string name="listen_normal">استمع 🔊</string>
+    <string name="listen_slow">ببطء 🐢</string>
+    <string name="sign_out">تسجيل الخروج</string>
+</resources>
